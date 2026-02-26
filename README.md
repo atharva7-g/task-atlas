@@ -81,7 +81,7 @@ The model does tend to miss a few anomalies such as in lx_bytes but a possible r
 # AI Usage
 
 The scripts in `src/scripts` were written with the help of an AI assistant. I supplied the template function but asked an LLM to vary metrics to create anomalies. 
-Additionally, the scatter plots in the visualization function were written with the help of AI as well.
+Additionally, the scatter plot layout in the visualization function was written with the help of AI as well.
 
 The subprocesses within the Jupyter Notebook used for visualization were written with the help of AI as well but this hasn't been used anywhere in the code. 
 
