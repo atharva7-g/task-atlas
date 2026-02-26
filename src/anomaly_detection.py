@@ -1,17 +1,26 @@
+import os.path
 import random
 
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
 from sklearn.preprocessing import StandardScaler
-from typing import Optional, Tuple, List
 from src.parser import Parser
 from src.utils import get_project_root
 
 
 class AnomalyDetector:
-	def __init__(self, parser: Parser, contamination=0.1, random_state=42, n_estimators=100):
-		self.parser = parser
+	def __init__(
+			self,
+			filepath,
+			contamination=0.1,
+			random_state=42,
+			n_estimators=100,
+	):
+		self.filepath = filepath
+		self.parser = Parser(filepath)
+		self.data = self.parser.data
+
 		self.contamination = contamination
 		self.random_state = random_state
 		self.n_estimators = n_estimators
@@ -25,7 +34,7 @@ class AnomalyDetector:
 		model = IsolationForest(
 			contamination=self.contamination,
 			random_state=self.random_state,
-			n_estimators=self.n_estimators
+			n_estimators=self.n_estimators,
 		)
 
 		return model
@@ -35,15 +44,8 @@ class AnomalyDetector:
 			columns = self.parser.get_metrics()
 
 		X = self.parser.get_feature_matrix(columns)
-
 		self.scaler = StandardScaler()
 		X_scaled = self.scaler.fit_transform(X)
-
-		self.model = IsolationForest(
-			contamination=self.contamination,
-			random_state=self.random_state,
-			n_estimators=self.n_estimators,
-		)
 
 		self.labels = self.model.fit_predict(X_scaled)
 		self.scores = self.model.decision_function(X_scaled)
@@ -67,7 +69,7 @@ class AnomalyDetector:
 	def get_anomalies(self, n=None):
 		mask = self.labels == -1
 
-		result = self.parser.data[mask].copy()
+		result = self.data[mask].copy()
 		result["anomaly_score"] = self.scores[mask]
 
 		result = result.sort_values("anomaly_score")
@@ -79,18 +81,20 @@ class AnomalyDetector:
 
 
 def main():
-	parser = Parser(f"{get_project_root()}/archive/prmon.txt")
-	parser.load()
+	filepath = os.path.join(get_project_root(), "dataset", "prmon_combined_timeseries_sorted.tsv")
+	detector = AnomalyDetector(filepath)
+	parser = Parser(filepath)
 
 	print(f"Loaded {len(parser.data)} rows")
+	print(f"Columns: {list(parser.data.columns)}")
+	print(f"Numeric columns for detection: {parser.get_metrics()}")
 
-	detector = AnomalyDetector(parser, contamination=0.05)
 	detector.fit_predict()
 
 	print(detector.get_anomaly_summary().to_string(index=False))
 
 	top_anomalies = detector.get_anomalies(10)
-	cols = ["Time", "wtime", "pss", "rss", "vmem", "rchar", "wchar", "anomaly_score"]
+	cols = ["Time", "pss", "rss", "vmem", "rchar", "wchar", "anomaly_score"]
 	print(top_anomalies[cols].to_string(index=False))
 
 	anomalies = detector.get_anomalies()

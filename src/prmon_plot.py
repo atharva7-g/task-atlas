@@ -24,6 +24,7 @@ except ImportError:
 # Define the labels/units for beautification
 # First allowed unit is the default
 ALLOWEDUNITS = {
+    "Time": ["sec", "min", "hour"],
     "vmem": ["kb", "b", "mb", "gb"],
     "pss": ["kb", "b", "mb", "gb"],
     "rss": ["kb", "b", "mb", "gb"],
@@ -48,6 +49,7 @@ ALLOWEDUNITS = {
 }
 
 AXISNAME = {
+    "Time": "Time",
     "vmem": "Memory",
     "pss": "Memory",
     "rss": "Memory",
@@ -72,6 +74,7 @@ AXISNAME = {
 }
 
 LEGENDNAMES = {
+    "Time": "Time",
     "vmem": "Virtual Memory",
     "pss": "Proportional Set Size",
     "rss": "Resident Set Size",
@@ -133,6 +136,7 @@ def check_input_file(file):
 def load_data(file):
     data = pd.read_csv(file, sep="\t")
     data["Time"] = pd.to_datetime(data["Time"], unit="s")
+    data.sort_values("Time", inplace=True)
     return data
 
 
@@ -312,7 +316,10 @@ def main():
     ydlist = []
 
     for i in range(len(data)):
-        xdata.append(np.array(data[i][xlabel] * xmultiplier))
+        if xlabel == "Time":
+            xdata.append(data[i][xlabel].values)
+        else:
+            xdata.append(np.array(data[i][xlabel] * xmultiplier))
         ydlist.append(make_list(ylist, data[i], args, xmultiplier, ymultiplier, xlabel))
 
     # Plot the graphs
