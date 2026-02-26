@@ -1,5 +1,3 @@
-# PRMon Anomaly Detection Project
-
 ## Dataset
 
 I was first told to generate a considerably large anomalous dataset. I used `prmon`'s `mem_burner` and `io_burner` to generate datasets in 6 execution phases: `baseline1`, `memory_spike`, `recovery1`, `cpu_surge`, `recovery2`, `io_burst`.
